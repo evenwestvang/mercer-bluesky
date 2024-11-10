@@ -15,13 +15,6 @@ const createWebSocketServer = () => {
         }
 
         broadcastMessage(messageData);
-
-        // Broadcast with rate limiting
-        // const now = Date.now();
-        // if (now - lastBroadcastTime >= config.BROADCAST_INTERVAL) {
-        //     broadcastMessage(messageData);
-        //     lastBroadcastTime = now;
-        // }
     };
 
     const broadcastMessage = (messageData) => {

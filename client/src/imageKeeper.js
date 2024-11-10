@@ -1,4 +1,4 @@
-const NSFW_THRESHOLD = 0.05; // 10% threshold
+const NSFW_THRESHOLD = 0.05; // 1% threshold
 
 export function renderImage(imageObject) {
     // Content filtering
