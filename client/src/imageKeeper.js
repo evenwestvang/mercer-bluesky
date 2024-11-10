@@ -16,6 +16,18 @@ const States = {
 };
 let currentState = States.NORMAL;
 
+let allowNSFW = false;  // Default to safe mode
+
+let isMouseDown = false;
+
+let lastDisplayedImage = null;
+
+export function initializeImageKeeper({ allowNSFW: nsfw = false } = {}) {
+    allowNSFW = nsfw;
+    canvasContext = initializeCanvas();
+    startAnimationLoop();
+}
+
 export function addImage(imageObject) {
     // Content filtering
     const classification = imageObject.classification || [];
@@ -25,7 +37,7 @@ export function addImage(imageObject) {
         c.probability > NSFW_THRESHOLD
     );
 
-    if (isNSFW) {
+    if (!allowNSFW && isNSFW) {
         console.warn('NSFW content filtered');
         return null;
     }
@@ -34,12 +46,6 @@ export function addImage(imageObject) {
         images.shift(); // Remove oldest image
     }
 
-    // Initialize canvas on first run
-    if (!canvasContext) {
-        canvasContext = initializeCanvas();
-        startAnimationLoop();
-    }
-    
     // Create and load image
     const img = new Image();
     img.src = imageObject.fullsize;
@@ -66,74 +72,88 @@ export function addImage(imageObject) {
 const drawFrame = () => {
     const { ctx, viewportWidth, viewportHeight } = canvasContext;
     
-    // Randomly clear image array
-    if (Math.random() < 0.002 && images.length > 5) {
-        images = [];
-        ticksTillNextImage = 20 + Math.floor(Math.random() * 30);
-    }
-
-    // Handle tick counter
-    if (ticksTillNextImage > 0) {
-        ticksTillNextImage--;
-    }
-
-    // Main drawing logic
-    if (blackPause === 0 && images.length > 0) {
-        isClear = false;
-
-        if (currentState === States.EXPLORE) {
-            const size = Math.random() * 0.6;
-            const sourceWidth = currentImage.element.width * size;
-            const sourceHeight = currentImage.element.height * size;
-            const x = sourceWidth * Math.random();
-            const y = sourceHeight * Math.random();
-
-            ctx.drawImage(
-                currentImage.element, 
-                x, y, sourceWidth, sourceHeight,
-                0, 0, viewportWidth, viewportHeight
-            );
-
-            if (Math.random() < 0.2) {
-                currentState = States.NORMAL;
-            }
-            blackPause = 1;
+    // Skip all drawing logic if mouse is down
+    if (!isMouseDown) {
+        // Randomly clear image array
+        if (Math.random() < 0.002 && images.length > 5) {
+            images = [];
+            ticksTillNextImage = 20 + Math.floor(Math.random() * 30);
         }
 
-        if (currentState === States.NORMAL) {
-            if (!currentImage || Math.random() < 0.7) {
-                currentImage = images[Math.floor(Math.random() * images.length)];
-            }
+        // Handle tick counter
+        if (ticksTillNextImage > 0) {
+            ticksTillNextImage--;
+        }
 
-            ctx.drawImage(
-                currentImage.element,
-                0, 0, viewportWidth, viewportHeight
-            );
-
-            if (Math.random() < 0.15) {
-                currentState = States.EXPLORE;
-            }
-
-            // Set black pause duration based on number of images
-            if (images.length < 5) {
-                blackPause = Math.floor(Math.random() * (MAX_IMAGES - images.length) * 3);
-            } else if (images.length < 10) {
-                blackPause = Math.floor(Math.random() * 4);
-            } else {
-                blackPause = Math.floor(Math.random() * 2);
-            }
-
+        // Main drawing logic
+        if (blackPause === 0 && images.length > 0) {
             isClear = false;
+
+            if (currentState === States.EXPLORE) {
+                const size = Math.random() * 0.6;
+                const sourceWidth = currentImage.element.width * size;
+                const sourceHeight = currentImage.element.height * size;
+                const x = sourceWidth * Math.random();
+                const y = sourceHeight * Math.random();
+
+                ctx.drawImage(
+                    currentImage.element, 
+                    x, y, sourceWidth, sourceHeight,
+                    0, 0, viewportWidth, viewportHeight
+                );
+
+                if (Math.random() < 0.2) {
+                    currentState = States.NORMAL;
+                }
+                blackPause = 1;
+            }
+
+            if (currentState === States.NORMAL) {
+                if (!currentImage || Math.random() < 0.7) {
+                    currentImage = images[Math.floor(Math.random() * images.length)];
+                }
+
+                ctx.drawImage(
+                    currentImage.element,
+                    0, 0, viewportWidth, viewportHeight
+                );
+
+                if (Math.random() < 0.15) {
+                    currentState = States.EXPLORE;
+                }
+
+                // Set black pause duration based on number of images
+                if (images.length < 5) {
+                    blackPause = Math.floor(Math.random() * (MAX_IMAGES - images.length) * 3);
+                } else if (images.length < 10) {
+                    blackPause = Math.floor(Math.random() * 4);
+                } else {
+                    blackPause = Math.floor(Math.random() * 2);
+                }
+
+                isClear = false;
+            }
+
+            // Store the last successfully drawn image
+            if (currentImage && !isClear) {
+                lastDisplayedImage = currentImage;
+            }
+        } else {
+            if (!isClear && Math.random() < 0.8) {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+                isClear = true;
+            }
+            if (blackPause > 0) {
+                blackPause--;
+            }
         }
-    } else {
-        if (!isClear && Math.random() < 0.8) {
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(0, 0, viewportWidth, viewportHeight);
-            isClear = true;
-        }
-        if (blackPause > 0) {
-            blackPause--;
-        }
+    } else if (lastDisplayedImage) {
+        // When mouse is down, keep showing the last displayed image
+        ctx.drawImage(
+            lastDisplayedImage.element,
+            0, 0, viewportWidth, viewportHeight
+        );
     }
 
     requestAnimationFrame(drawFrame);
@@ -153,24 +173,43 @@ const initializeCanvas = () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     
-    // Handle retina displays
-    const dpr = window.devicePixelRatio || 1;
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
+    // Move viewport sizing logic to separate function for reuse
+    const updateCanvasSize = () => {
+        const dpr = window.devicePixelRatio || 1;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        canvas.width = viewportWidth * dpr;
+        canvas.height = viewportHeight * dpr;
+        canvas.style.width = `${viewportWidth}px`;
+        canvas.style.height = `${viewportHeight}px`;
+        
+        ctx.scale(dpr, dpr);
+        
+        return { viewportWidth, viewportHeight };
+    };
     
-    // Set canvas size accounting for device pixel ratio
-    canvas.width = viewportWidth * dpr;
-    canvas.height = viewportHeight * dpr;
+    // Initial canvas setup
+    const viewport = updateCanvasSize();
     
-    // Scale canvas CSS dimensions
-    canvas.style.width = `${viewportWidth}px`;
-    canvas.style.height = `${viewportHeight}px`;
+    // Add resize listener
+    window.addEventListener('resize', () => {
+        const newViewport = updateCanvasSize();
+        canvasContext.viewportWidth = newViewport.viewportWidth;
+        canvasContext.viewportHeight = newViewport.viewportHeight;
+    });
     
-    // Scale context to match device pixel ratio
-    ctx.scale(dpr, dpr);
+    // Add mouse event listeners
+    canvas.addEventListener('mousedown', () => isMouseDown = true);
+    canvas.addEventListener('mouseup', () => isMouseDown = false);
+    canvas.addEventListener('mouseleave', () => isMouseDown = false);
     
-    // Add canvas to DOM
     document.body.appendChild(canvas);
     
-    return { canvas, ctx, viewportWidth, viewportHeight };
+    return { 
+        canvas, 
+        ctx, 
+        viewportWidth: viewport.viewportWidth, 
+        viewportHeight: viewport.viewportHeight 
+    };
 };
