@@ -4,6 +4,18 @@ const NSFW_THRESHOLD = 0.05; // 1% threshold
 let canvasContext = null;
 let images = [];
 
+const MAX_IMAGES = 20;
+let currentImage = null;
+let blackPause = 0;
+let ticksTillNextImage = 0;
+let isClear = false;
+
+const States = {
+    NORMAL: 'normal',
+    EXPLORE: 'explore'
+};
+let currentState = States.NORMAL;
+
 export function addImage(imageObject) {
     // Content filtering
     const classification = imageObject.classification || [];
@@ -16,6 +28,10 @@ export function addImage(imageObject) {
     if (isNSFW) {
         console.warn('NSFW content filtered');
         return null;
+    }
+
+    if (images.length >= MAX_IMAGES) {
+        images.shift(); // Remove oldest image
     }
 
     // Initialize canvas on first run
@@ -47,35 +63,91 @@ export function addImage(imageObject) {
     return img;
 }
 
-const drawRandomImage = (ctx, viewportWidth, viewportHeight) => {
-    if (images.length === 0) return;
+const drawFrame = () => {
+    const { ctx, viewportWidth, viewportHeight } = canvasContext;
     
-    // Select random image
-    const img = images[Math.floor(Math.random() * images.length)];
-    
-    // Calculate random position
-    const x = Math.floor(Math.random() * (viewportWidth - img.width));
-    const y = Math.floor(Math.random() * (viewportHeight - img.height));
-    
-    ctx.drawImage(img.element, x, y, img.width, img.height);
+    // Randomly clear image array
+    if (Math.random() < 0.002 && images.length > 5) {
+        images = [];
+        ticksTillNextImage = 20 + Math.floor(Math.random() * 30);
+    }
+
+    // Handle tick counter
+    if (ticksTillNextImage > 0) {
+        ticksTillNextImage--;
+    }
+
+    // Main drawing logic
+    if (blackPause === 0 && images.length > 0) {
+        isClear = false;
+
+        if (currentState === States.EXPLORE) {
+            const size = Math.random() * 0.6;
+            const sourceWidth = currentImage.element.width * size;
+            const sourceHeight = currentImage.element.height * size;
+            const x = sourceWidth * Math.random();
+            const y = sourceHeight * Math.random();
+
+            ctx.drawImage(
+                currentImage.element, 
+                x, y, sourceWidth, sourceHeight,
+                0, 0, viewportWidth, viewportHeight
+            );
+
+            if (Math.random() < 0.2) {
+                currentState = States.NORMAL;
+            }
+            blackPause = 1;
+        }
+
+        if (currentState === States.NORMAL) {
+            if (!currentImage || Math.random() < 0.7) {
+                currentImage = images[Math.floor(Math.random() * images.length)];
+            }
+
+            ctx.drawImage(
+                currentImage.element,
+                0, 0, viewportWidth, viewportHeight
+            );
+
+            if (Math.random() < 0.15) {
+                currentState = States.EXPLORE;
+            }
+
+            // Set black pause duration based on number of images
+            if (images.length < 5) {
+                blackPause = Math.floor(Math.random() * (MAX_IMAGES - images.length) * 3);
+            } else if (images.length < 10) {
+                blackPause = Math.floor(Math.random() * 4);
+            } else {
+                blackPause = Math.floor(Math.random() * 2);
+            }
+
+            isClear = false;
+        }
+    } else {
+        if (!isClear && Math.random() < 0.8) {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+            isClear = true;
+        }
+        if (blackPause > 0) {
+            blackPause--;
+        }
+    }
+
+    requestAnimationFrame(drawFrame);
 };
 
+// Replace existing startAnimationLoop with:
 const startAnimationLoop = () => {
-    const draw = () => {
-        const { ctx, viewportWidth, viewportHeight } = canvasContext;
-        
-        
-        // Draw single random image
-        drawRandomImage(ctx, viewportWidth, viewportHeight);
-        
-        // Request next frame
-        requestAnimationFrame(draw);
-    };
+    const { ctx } = canvasContext;
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvasContext.viewportWidth, canvasContext.viewportHeight);
     
-    // Start the animation loop
-    requestAnimationFrame(draw);
+    requestAnimationFrame(drawFrame);
 };
-
 
 const initializeCanvas = () => {
     const canvas = document.createElement('canvas');
