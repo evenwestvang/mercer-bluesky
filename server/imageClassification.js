@@ -19,7 +19,6 @@ const classifyImageFromUrl = async (imageUrl) => {
         const imageTensor = tf.node.decodeImage(new Uint8Array(imageBuffer), 3)
         const predictions = await model.classify(imageTensor)
         imageTensor.dispose()
-        console.log(predictions)
         return predictions
     } catch (error) {
         console.error('Error classifying image:', error)

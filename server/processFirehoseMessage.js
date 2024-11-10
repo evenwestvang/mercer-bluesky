@@ -17,14 +17,6 @@ export const processFirehoseMessage = (wsServer) => async (message) => {
 
         try {
 
-            // Simple throttling - only process one message per second
-            const now = Date.now();
-            if (!processFirehoseMessage.lastProcessTime || now - processFirehoseMessage.lastProcessTime >= 1000) {
-                processFirehoseMessage.lastProcessTime = now;
-            } else {
-                continue;
-            }
-
             const postResponse = await agent.api.app.bsky.feed.getPostThread({
                 uri: uri,
                 depth: 0

@@ -1,6 +1,19 @@
+const NSFW_THRESHOLD = 0.05; // 10% threshold
 
-export function renderImage(imageData) {
-    console.info(imageData)
+export function renderImage(imageObject) {
+    // Content filtering
+    const classification = imageObject.classification || [];
+    
+    const isNSFW = classification.some(c => 
+        (c.className === 'Porn' || c.className === 'Hentai') && 
+        c.probability > NSFW_THRESHOLD
+    );
+
+    if (isNSFW) {
+        console.warn('NSFW content filtered');
+        return null;
+    }
+
     // Initialize canvas on first run
     if (!canvasContext) {
         canvasContext = initializeCanvas();
@@ -10,7 +23,7 @@ export function renderImage(imageData) {
     
     // Create temporary image to load data
     const img = new Image();
-    img.src = imageData;
+    img.src = imageObject.fullsize; // Use fullsize URL from image object
     
     img.onload = () => {
         // Calculate scaled dimensions (max 300px)
@@ -26,7 +39,7 @@ export function renderImage(imageData) {
         ctx.drawImage(img, randomX, randomY, width, height);
     };
     
-    return img; // Still return image for consistency with original API
+    return img;
 }
 
 const initializeCanvas = () => {

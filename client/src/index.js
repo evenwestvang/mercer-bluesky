@@ -12,7 +12,6 @@ function connectWebSocket() {
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
         const images = message.embed.images
-        console.log(`Images added: ${images.length}`);
         images.forEach(image => {
             renderImage(image);
         });
