@@ -6,6 +6,7 @@
 /server/package-lock.json
 /client/package-lock.json
 
+**~
 
 # Environment files
 .env

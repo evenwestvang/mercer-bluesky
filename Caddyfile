@@ -1,7 +1,9 @@
-bigmood.blue {
+:80 {
+
     root * /home/even/mercer-bluesky/client/dist
     file_server
 
+    
     reverse_proxy /ws localhost:3001 {
         header_up Upgrade {http.upgrade}
         header_up Connection {http.upgrade}
