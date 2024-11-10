@@ -28,7 +28,7 @@ const classifyImageFromUrl = async (imageUrl) => {
 
 export const classifyImages = async (images) => {
     try {
-        const imageUrls = images.map(img => img.fullsize)
+        const imageUrls = images.map(img => img.thumb)
         return await Promise.all(
             imageUrls.map(url => classifyImageFromUrl(url))
         )
