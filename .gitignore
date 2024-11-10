@@ -18,7 +18,6 @@
 # Build outputs
 /dist
 /build
-**/dist
 **/build
 
 # Debug logs
