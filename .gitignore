@@ -1,0 +1,60 @@
+# Dependencies
+/server/node_modules/
+/client/node_modules/
+
+# Package locks
+/server/package-lock.json
+/client/package-lock.json
+
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Build outputs
+/dist
+/build
+**/dist
+**/build
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug.log
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Testing
+/coverage
+**/coverage
+
+# Client-specific
+/client/.cache
+/client/.parcel-cache
+/client/.next
+/client/out
+
+# Server-specific
+/server/logs
+/server/*.log
+
+# Misc
+.cache/
+.temp/
+.tmp/
+*.log
+*.pid
+*.seed
+*.pid.lock 
