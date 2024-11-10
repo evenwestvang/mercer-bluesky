@@ -1,6 +1,10 @@
 const NSFW_THRESHOLD = 0.05; // 1% threshold
 
-export function renderImage(imageObject) {
+// Store both canvas context and images array globally
+let canvasContext = null;
+let images = [];
+
+export function addImage(imageObject) {
     // Content filtering
     const classification = imageObject.classification || [];
     
@@ -17,13 +21,12 @@ export function renderImage(imageObject) {
     // Initialize canvas on first run
     if (!canvasContext) {
         canvasContext = initializeCanvas();
+        startAnimationLoop();
     }
     
-    const { ctx, viewportWidth, viewportHeight } = canvasContext;
-    
-    // Create temporary image to load data
+    // Create and load image
     const img = new Image();
-    img.src = imageObject.fullsize; // Use fullsize URL from image object
+    img.src = imageObject.fullsize;
     
     img.onload = () => {
         // Calculate scaled dimensions (max 300px)
@@ -31,16 +34,48 @@ export function renderImage(imageObject) {
         const width = img.width * scale;
         const height = img.height * scale;
         
-        // Calculate random position
-        const randomX = Math.floor(Math.random() * (viewportWidth - width));
-        const randomY = Math.floor(Math.random() * (viewportHeight - height));
-        
-        // Draw image to canvas
-        ctx.drawImage(img, randomX, randomY, width, height);
+        // Store image with its dimensions and random position
+        images.push({
+            element: img,
+            width,
+            height,
+            x: Math.floor(Math.random() * (canvasContext.viewportWidth - width)),
+            y: Math.floor(Math.random() * (canvasContext.viewportHeight - height))
+        });
     };
     
     return img;
 }
+
+const drawRandomImage = (ctx, viewportWidth, viewportHeight) => {
+    if (images.length === 0) return;
+    
+    // Select random image
+    const img = images[Math.floor(Math.random() * images.length)];
+    
+    // Calculate random position
+    const x = Math.floor(Math.random() * (viewportWidth - img.width));
+    const y = Math.floor(Math.random() * (viewportHeight - img.height));
+    
+    ctx.drawImage(img.element, x, y, img.width, img.height);
+};
+
+const startAnimationLoop = () => {
+    const draw = () => {
+        const { ctx, viewportWidth, viewportHeight } = canvasContext;
+        
+        
+        // Draw single random image
+        drawRandomImage(ctx, viewportWidth, viewportHeight);
+        
+        // Request next frame
+        requestAnimationFrame(draw);
+    };
+    
+    // Start the animation loop
+    requestAnimationFrame(draw);
+};
+
 
 const initializeCanvas = () => {
     const canvas = document.createElement('canvas');
@@ -67,6 +102,3 @@ const initializeCanvas = () => {
     
     return { canvas, ctx, viewportWidth, viewportHeight };
 };
-
-// Store canvas context globally to avoid reinitializing
-let canvasContext = null;

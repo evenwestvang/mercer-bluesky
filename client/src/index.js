@@ -1,6 +1,6 @@
 
 
-import { renderImage } from './imageKeeper.js';
+import { addImage } from './imageKeeper.js';
 
 const ws = new WebSocket('ws://localhost:3001');
 const feedDiv = document.getElementById('feed');
@@ -13,7 +13,7 @@ function connectWebSocket() {
         const message = JSON.parse(event.data);
         const images = message.embed.images
         images.forEach(image => {
-            renderImage(image);
+            addImage(image);
         });
     };
 
