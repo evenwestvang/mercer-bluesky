@@ -14,7 +14,7 @@ function connectWebSocket() {
         const images = message.embed.images
         console.log(`Images added: ${images.length}`);
         images.forEach(image => {
-            renderImage(image.fullsize);
+            renderImage(image);
         });
     };
 

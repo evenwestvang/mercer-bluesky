@@ -1,4 +1,5 @@
 import { BskyAgent } from '@atproto/api';
+import { classifyImages } from './imageClassification.js'
 
 const agent = new BskyAgent({
     service: 'https://public.api.bsky.app'
@@ -34,11 +35,21 @@ export const processFirehoseMessage = (wsServer) => async (message) => {
                 continue;
             }
 
+            const images = postResponse.data.thread.post.embed.images
+            const classifications = await classifyImages(images)
+            const imagesWithClassifications = images.map((image, index) => ({
+                ...image,
+                classification: classifications[index]
+            }))
+
             const messageData = {
                 uri,
                 op,
                 repo: message.repo,
-                embed: postResponse.data.thread.post.embed
+                embed: {
+                    ...postResponse.data.thread.post.embed,
+                    images: imagesWithClassifications
+                },
             };
 
             wsServer.handleMessage(messageData);
