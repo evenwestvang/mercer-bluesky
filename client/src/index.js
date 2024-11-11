@@ -2,12 +2,13 @@ import { addImage, initializeImageKeeper } from './imageKeeper.js';
 
 const getWebSocketUrl = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
+    const host = window.location.host;    
     return `${protocol}//${host}`;
 };
 
 export function connectWebSocket({ allowNSFW = false } = {}) {
     const ws = new WebSocket(getWebSocketUrl());
+    console.log('**** WebSocket URL:', getWebSocketUrl());
     initializeImageKeeper({ allowNSFW })
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
