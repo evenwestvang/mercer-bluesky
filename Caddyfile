@@ -1,13 +1,10 @@
 bigmood.blue {
+	root * /home/even/mercer-bluesky/client/dist
+	file_server
 
-    root * /home/even/mercer-bluesky/client/dist
-    file_server
+	reverse_proxy /ws* localhost:3001 {
+        	header_up Connection {http.request.header.Connection}
+        	header_up Upgrade {http.request.header.Upgrade}
+    	}
 
-    
-    reverse_proxy /ws localhost:3001 {
-        header_up Upgrade {http.upgrade}
-        header_up Connection {http.upgrade}
-    }
 }
-
-
