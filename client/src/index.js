@@ -2,7 +2,6 @@ import { addImage, initializeImageKeeper } from './imageKeeper.js';
 
 const getWebSocketUrl = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const protocol = 'ws:';
     const host = window.location.hostname;
     const port = window.location.hostname === 'localhost' ? ':3001' : '';
     return `${protocol}//${host}${port}`;
