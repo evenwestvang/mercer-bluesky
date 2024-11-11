@@ -4,7 +4,8 @@ const getWebSocketUrl = () => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.hostname;
     const port = window.location.hostname === 'localhost' ? ':3001' : '';
-    return `${protocol}//${host}${port}`;
+    const path = window.location.hostname === 'localhost' ? '' : '/ws';
+    return `${protocol}//${host}${port}${path}`;
 };
 
 export function connectWebSocket({ allowNSFW = false } = {}) {
