@@ -6,7 +6,7 @@ const agent = new BskyAgent({
 });
 
 // Add rate limiting configuration
-const RATE_LIMIT = 3; // requests per second
+const RATE_LIMIT = 4; // requests per second
 let requestCount = 0;
 let lastReset = Date.now();
 
