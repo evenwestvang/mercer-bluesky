@@ -1,4 +1,4 @@
-:80 {
+bigmood.blue {
 
     root * /home/even/mercer-bluesky/client/dist
     file_server

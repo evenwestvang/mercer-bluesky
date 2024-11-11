@@ -1,8 +1,6 @@
 # i know, but it's almosy 1am and I want to see this run
 #!/bin/bash
 
-# Tensorflow, very picky
-nvm use 20.17.0
 
 # Static name for the tmux session
 SESSION_NAME="server"
