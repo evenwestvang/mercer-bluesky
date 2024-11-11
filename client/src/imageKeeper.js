@@ -199,10 +199,22 @@ const initializeCanvas = () => {
         canvasContext.viewportHeight = newViewport.viewportHeight;
     });
     
-    // Add mouse event listeners
-    canvas.addEventListener('mousedown', () => isMouseDown = true);
-    canvas.addEventListener('mouseup', () => isMouseDown = false);
-    canvas.addEventListener('mouseleave', () => isMouseDown = false);
+    // Combined mouse and touch event handlers
+    const handleStart = () => isMouseDown = true;
+    const handleEnd = () => isMouseDown = false;
+    
+    // Mouse events
+    canvas.addEventListener('mousedown', handleStart);
+    canvas.addEventListener('mouseup', handleEnd);
+    canvas.addEventListener('mouseleave', handleEnd);
+    
+    // Touch events
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault(); // Prevent scrolling/zooming
+        handleStart();
+    });
+    canvas.addEventListener('touchend', handleEnd);
+    canvas.addEventListener('touchcancel', handleEnd);
     
     document.body.appendChild(canvas);
     
