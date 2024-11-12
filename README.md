@@ -1,10 +1,10 @@
 # mercer-bluesky
-A weekend project to pummel you with the Bluesky firehose.
-Host yourself, or check out the one running at [bigmood.blue](https://bigmood.blue).
-👋 [Even](https://bsky.app/profile/even.westvang.com)
+A weekend project from 👋 [Even](https://bsky.app/profile/even.westvang.com) to pummel you with the real-time Bluesky firehose.
+Host yourself, or check out the one running on [bigmood.blue](https://bigmood.blue).
 
-## Run it
-* `npm install && npm run start` in both client and server directories. tensorflow-js seems to want v20.17.0.
+## Get it running
+* `npm install && npm run start` in both client and server directories
+* `TensorFlow.js` seems to not like some nodes newer than v20.17.0
 * There are no authed APIs so there are no keys to get or secret handshakes to do with anyone
 
 ## Notes
