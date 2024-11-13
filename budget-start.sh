@@ -1,24 +1,16 @@
-Yes, good catch! Let's make sure we're in the right starting directory. Here's the updated script:
-
-```bash
 #!/bin/bash
 
-# Get the directory where the script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SESSION_NAME="server"
-LOG_DIR="${SCRIPT_DIR}/logs"
+LOG_DIR="logs"
 LOG_FILE="${LOG_DIR}/server_$(date +%Y%m%d_%H%M%S).log"
 
 # Create logs directory if it doesn't exist
 mkdir -p $LOG_DIR
 
-# Start from script directory
-cd $SCRIPT_DIR
-
 # Kill existing session
 tmux has-session -t $SESSION_NAME 2>/dev/null
 if [ $? == 0 ]; then
-    tmux kill-session -t $SESSION_NAME
+   tmux kill-session -t $SESSION_NAME
 fi
 
 # Build client first
@@ -26,19 +18,19 @@ cd ./client
 npm run build
 
 if [ $? -ne 0 ]; then
-    echo "Build failed, not starting the server."
-    exit 1
+   echo "Build failed, not starting the server."
+   exit 1
 fi
 
-# Reset to script directory before creating tmux session
-cd $SCRIPT_DIR
+# Reset to starting directory
+cd ..
 
 # Create tmux session and initialize environment
 tmux new-session -d -s $SESSION_NAME
 
 # Create a restart loop in the tmux session with logging
 tmux send-keys -t $SESSION_NAME "export NODE_ENV=production" C-m
-tmux send-keys -t $SESSION_NAME "cd ${SCRIPT_DIR}/server" C-m
+tmux send-keys -t $SESSION_NAME "cd server" C-m
 tmux send-keys -t $SESSION_NAME "while true; do" C-m
 tmux send-keys -t $SESSION_NAME "  echo '$(date): Starting server...' >> $LOG_FILE 2>&1" C-m
 tmux send-keys -t $SESSION_NAME "  npm run start >> $LOG_FILE 2>&1 & SERVER_PID=\$!" C-m
@@ -50,12 +42,3 @@ tmux send-keys -t $SESSION_NAME "done" C-m
 
 echo "Server started in tmux session '$SESSION_NAME' with 30-minute restart cycle"
 echo "Logs available in $LOG_FILE"
-```
-
-Changes:
-1. Added `SCRIPT_DIR` to get absolute path of script location
-2. Reset to script directory before starting tmux
-3. Use absolute paths when changing directories in tmux
-4. Log directory is now relative to script location
-
-This ensures consistent behavior regardless of where you run the script from. Want any adjustments to the directory handling?
