@@ -32,7 +32,6 @@ export const processFirehoseMessage = (wsServer) => async (message) => {
         requestCount++;
 
         try {
-            console.log("fetching post")
             const postResponse = await agent.api.app.bsky.feed.getPostThread({
                 uri: uri,
                 depth: 0
