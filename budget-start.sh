@@ -1,30 +1,61 @@
-# i know, but it's almosy 1am and I want to see this run
+Yes, good catch! Let's make sure we're in the right starting directory. Here's the updated script:
+
+```bash
 #!/bin/bash
 
-
-# Static name for the tmux session
+# Get the directory where the script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SESSION_NAME="server"
+LOG_DIR="${SCRIPT_DIR}/logs"
+LOG_FILE="${LOG_DIR}/server_$(date +%Y%m%d_%H%M%S).log"
 
-# Kill the existing tmux session with the name "server" if it exists
+# Create logs directory if it doesn't exist
+mkdir -p $LOG_DIR
+
+# Start from script directory
+cd $SCRIPT_DIR
+
+# Kill existing session
 tmux has-session -t $SESSION_NAME 2>/dev/null
 if [ $? == 0 ]; then
     tmux kill-session -t $SESSION_NAME
 fi
 
-# Navigate to the client directory and run build
+# Build client first
 cd ./client
 npm run build
 
-# Check if the build was successful
 if [ $? -ne 0 ]; then
     echo "Build failed, not starting the server."
     exit 1
 fi
 
-# Create a new tmux session for the server, detached, and set NODE_ENV to production
-tmux new-session -d -s $SESSION_NAME
-tmux send-keys -t $SESSION_NAME "export NODE_ENV=production" C-m
-tmux send-keys -t $SESSION_NAME "cd ../server" C-m
-tmux send-keys -t $SESSION_NAME "npm run start" C-m
+# Reset to script directory before creating tmux session
+cd $SCRIPT_DIR
 
-echo "Server started in tmux session '$SESSION_NAME'"
+# Create tmux session and initialize environment
+tmux new-session -d -s $SESSION_NAME
+
+# Create a restart loop in the tmux session with logging
+tmux send-keys -t $SESSION_NAME "export NODE_ENV=production" C-m
+tmux send-keys -t $SESSION_NAME "cd ${SCRIPT_DIR}/server" C-m
+tmux send-keys -t $SESSION_NAME "while true; do" C-m
+tmux send-keys -t $SESSION_NAME "  echo '$(date): Starting server...' >> $LOG_FILE 2>&1" C-m
+tmux send-keys -t $SESSION_NAME "  npm run start >> $LOG_FILE 2>&1 & SERVER_PID=\$!" C-m
+tmux send-keys -t $SESSION_NAME "  sleep 1800" C-m  # 30 minutes
+tmux send-keys -t $SESSION_NAME "  echo '$(date): Restarting server...' >> $LOG_FILE 2>&1" C-m
+tmux send-keys -t $SESSION_NAME "  kill \$SERVER_PID 2>> $LOG_FILE" C-m
+tmux send-keys -t $SESSION_NAME "  sleep 5" C-m  # Give it time to shut down cleanly
+tmux send-keys -t $SESSION_NAME "done" C-m
+
+echo "Server started in tmux session '$SESSION_NAME' with 30-minute restart cycle"
+echo "Logs available in $LOG_FILE"
+```
+
+Changes:
+1. Added `SCRIPT_DIR` to get absolute path of script location
+2. Reset to script directory before starting tmux
+3. Use absolute paths when changing directories in tmux
+4. Log directory is now relative to script location
+
+This ensures consistent behavior regardless of where you run the script from. Want any adjustments to the directory handling?
