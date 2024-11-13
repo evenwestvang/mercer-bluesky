@@ -13,15 +13,14 @@ As of mid November 2024 the Bluesky feed has tens of images per second in the fe
 ## Why this thing?
 In Philip K. Dick's "Do Androids Dream of Electric Sheep?", Mercer's empathy box created a shared fusion state through crude tactile interfaces. This digital experiment pulses the bluesky real-time feed at 60fps with forced black frames between each image, creating after-image burns across the retina. Multiple crops of the same source material phase and interlace with unrelated images, building a perceptual static. The effect might be empathy, might be noise, might be neither.
 ```
-     /\
-    /  \
-   /:.  \
-  /:::   \
- /:::::   \
-/::::::    \
-     |  |
-     |  |
-   --+--+--
+ 
+    ▲
+  ▲|▲
+ ◇||||◇
+  |╫|
+   ┼
+ .:┣╋┫:.
+
     Æ0N
 ```
 

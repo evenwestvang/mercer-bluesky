@@ -26,7 +26,6 @@ const createWebSocketServer = () => {
     };
 
     wss.on('connection', (ws) => {
-        console.log('Client connected');
         messageHistory.forEach(msg => {
             ws.send(JSON.stringify(msg));
         });
