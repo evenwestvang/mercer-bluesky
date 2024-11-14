@@ -1,16 +1,14 @@
-import cors from 'cors';
-import { config } from './constants.js';
 import createWebSocketServer from './websocket/websocketServer.js';
-import createFirehoseService from './services/firehose.js';
-import { processFirehoseMessage } from './processFirehoseMessage.js';
+import createJetstreamService from './services/jetstream.js';
+import { processJetstreamMessage } from './processJetstreamMessage.js';
 
 const initializeServer = () => {
     // Setup WebSocket server
     const wsServer = createWebSocketServer();
 
-    // Setup Firehose service
-    const firehoseService = createFirehoseService(processFirehoseMessage(wsServer));
-    firehoseService.setupFirehose();
+    // Setup Jetstream service
+    const jetstreamService = createJetstreamService(processJetstreamMessage(wsServer));
+    jetstreamService.setupJetstream();
 };
 
 initializeServer();
