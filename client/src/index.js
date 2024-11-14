@@ -12,6 +12,7 @@ export function connectWebSocket({ allowNSFW = false } = {}) {
     const url = getWebSocketUrl()
     const ws = new WebSocket(url);
     initializeImageKeeper({ allowNSFW })
+
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
         const images = message.embed.images

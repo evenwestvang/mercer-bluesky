@@ -22,10 +22,13 @@ let isMouseDown = false;
 
 let lastDisplayedImage = null;
 
-export function initializeImageKeeper({ allowNSFW: nsfw = false } = {}) {
-    allowNSFW = nsfw;
+document.addEventListener('DOMContentLoaded', () => {
     canvasContext = initializeCanvas();
     startAnimationLoop();
+});
+
+export function initializeImageKeeper({ allowNSFW: nsfw = false } = {}) {
+    allowNSFW = nsfw;
 }
 
 export function addImage(imageObject) {
