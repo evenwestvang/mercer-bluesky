@@ -1,11 +1,13 @@
 import { addImage, initializeImageKeeper } from './imageKeeper.js';
 
 const getWebSocketUrl = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.hostname;
-    const port = window.location.hostname === 'localhost' ? ':3001' : '';
-    const path = window.location.hostname === 'localhost' ? '' : '/ws';
-    return `${protocol}//${host}${port}${path}`;
+    if (window.location.hostname === 'localhost') {
+        // Local development
+        return 'ws://localhost:8787';
+    }
+    // Production
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${wsProtocol}//${window.location.host}`;
 };
 
 export function connectWebSocket({ allowNSFW = false } = {}) {

@@ -1,0 +1,16 @@
+name = "mercer-bluesky"
+main = "src/worker.js"
+compatibility_date = "2023-01-01"
+
+[durable_objects]
+bindings = [
+  { name = "WEBSOCKET_SERVER", class_name = "WebSocketServer" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["WebSocketServer"]
+
+[dev]
+port = 8787
+local_protocol = "http"
