@@ -16,6 +16,9 @@
 .env.test
 .env.production
 
+# No wrangler output
+.wrangler/*
+
 # Build outputs
 /dist
 /build
