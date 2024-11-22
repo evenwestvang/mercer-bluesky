@@ -32,16 +32,21 @@ export function initializeImageKeeper({ allowNSFW: nsfw = false } = {}) {
 }
 
 export function addImage(imageObject) {
+
     // Content filtering
     const classification = imageObject.classification || [];
-    
-    const isNSFW = classification.some(c => 
+
+    if (classification.length == 0) {
+        return null;
+    }
+
+    const isNSFW = classification.length == 0 || classification.some(c => 
         (c.className === 'Porn' || c.className === 'Hentai') && 
         c.probability > NSFW_THRESHOLD
     );
 
     if (!allowNSFW && isNSFW) {
-        console.warn('NSFW content filtered');
+        // console.warn('NSFW content filtered');
         return null;
     }
 

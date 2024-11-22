@@ -24,31 +24,28 @@ export const processJetstreamMessage = (wsServer) => async (message) => {
         return
     }
 
-    // Skip if we're over the rate limit
-    if (requestCount >= RATE_LIMIT) {
-        return
-    }
-    requestCount++;
-
     try {
         const postResponse = await agent.api.app.bsky.feed.getPostThread({
             uri: uri,
             depth: 0
         });
 
-
         if (!postResponse.success || !postResponse.data?.thread?.post?.embed) {
             return
         }
 
-        const images = postResponse.data.thread.post.embed.images
-        
+        const images = postResponse.data.thread.post.embed.images;
+        let classifications = Array(images.length).fill(null);
 
-        const classifications = await classifyImages(images)
-            .catch(error => {
-                console.error('Error classifying images:', error);
-                return Array(images.length).fill(null);
-            });
+        // Only classify images if we're under rate limit
+        if (requestCount < RATE_LIMIT) {
+            requestCount++;
+            classifications = await classifyImages(images)
+                .catch(error => {
+                    console.error('Error classifying images:', error);
+                    return Array(images.length).fill(null);
+                });
+        }
 
         const imagesWithClassifications = images.map((image, index) => ({
             ...image,
@@ -63,7 +60,6 @@ export const processJetstreamMessage = (wsServer) => async (message) => {
                 images: imagesWithClassifications
             },
         };
-
 
         wsServer.handleMessage(messageData);
 
