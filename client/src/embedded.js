@@ -17,7 +17,7 @@ export function connectWebSocket({ allowNSFW = false } = {}) {
         const message = JSON.parse(event.data);
         const images = message.embed.images
         images.forEach(image => {
-            addImage(image, allowNSFW);
+            addImage(image);
         });
     };
 
