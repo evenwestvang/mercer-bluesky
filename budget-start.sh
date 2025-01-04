@@ -2,10 +2,10 @@
 
 SESSION_NAME="server"
 LOG_DIR="logs"
-LOG_FILE="${LOG_DIR}/server_$(date +%Y%m%d_%H%M%S).log"
+LOG_FILE="/dev/null"
 
 # Create logs directory if it doesn't exist
-mkdir -p $LOG_DIR
+# mkdir -p $LOG_DIR
 
 # Kill existing session
 tmux has-session -t $SESSION_NAME 2>/dev/null
