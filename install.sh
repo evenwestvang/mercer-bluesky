@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Setup node symlinks
+./setup-node-link.sh
+
 # Ensure systemd user directory exists
 mkdir -p ~/.config/systemd/user/
 

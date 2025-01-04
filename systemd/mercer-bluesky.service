@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/home/even/mercer-bluesky
-ExecStart=/usr/bin/node server/wrapper.js
+ExecStart=/usr/local/bin/node server/wrapper.js
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
