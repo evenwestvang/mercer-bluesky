@@ -5,12 +5,15 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/even/mercer-bluesky
-ExecStart=/usr/local/bin/node server/wrapper.js
+WorkingDirectory=/home/even/mercer-bluesky/server
+ExecStart=/usr/local/bin/node /home/even/mercer-bluesky/server/wrapper.js
 Restart=always
 RestartSec=10
 Environment=NODE_ENV=production
 Environment=LOAD_THRESHOLD=0.8
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+StandardOutput=append:/home/even/mercer-bluesky/logs/systemd.log
+StandardError=append:/home/even/mercer-bluesky/logs/systemd.error.log
 
 [Install]
 WantedBy=default.target
