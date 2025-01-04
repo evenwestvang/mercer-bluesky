@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Setup node symlinks
-./setup-node-link.sh
-
 # Install dependencies and build client
 cd client
 npm install
