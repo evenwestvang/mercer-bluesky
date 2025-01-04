@@ -37,15 +37,9 @@ const classifyImageFromUrl = async (imageUrl) => {
         imageTensor.dispose()
         return predictions
     } catch (error) {
-        if (error.name === 'AbortError' || error.code === 'ETIMEDOUT') {
-            // Quiet timeout errors
-            return null
-        }
-        console.error('Image classification error:', {
-            url: imageUrl,
-            error: error.message
-        })
-        return null
+        // Silently handle fetch errors as they're expected
+        // Return empty classification array to indicate no results
+        return []
     }
 }
 
