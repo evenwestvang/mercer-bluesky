@@ -55,24 +55,8 @@ function restartIfUnhealthy() {
     }
 }
 
-function buildClient() {
-    console.log(`[${new Date().toISOString()}] Building client...`);
-    const clientDir = join(__dirname, '..', 'client');
-    const result = spawnSync('npm', ['run', 'build'], {
-        stdio: 'inherit',
-        cwd: clientDir
-    });
-    
-    if (result.status !== 0) {
-        console.error('Client build failed');
-        process.exit(1);
-    }
-}
-
 function startServer() {
     console.log(`[${new Date().toISOString()}] Starting server...`);
-    
-    buildClient();
     
     serverProcess = spawn('npm', ['run', 'start'], {
         stdio: 'inherit',
