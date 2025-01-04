@@ -1,23 +1,26 @@
-import { spawn, spawnSync } from 'child_process';
+import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import os from 'os';
 import winston from 'winston';
 import 'winston-daily-rotate-file';
 
-// Get __dirname equivalent in ESM
+// Get absolute paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const PROJECT_ROOT = dirname(__dirname);
+const SERVER_DIR = join(PROJECT_ROOT, 'server');
 
-// Setup logging
+// Setup logging with absolute paths
 const logger = winston.createLogger({
     transports: [
         new winston.transports.DailyRotateFile({
-            filename: 'logs/server-%DATE%.log',
+            filename: join(PROJECT_ROOT, 'logs/server-%DATE%.log'),
             datePattern: 'YYYY-MM-DD',
             maxSize: '20m',
             maxFiles: '14d'
-        })
+        }),
+        new winston.transports.Console() // Add console logging for debugging
     ]
 });
 
@@ -56,14 +59,16 @@ function restartIfUnhealthy() {
 }
 
 function startServer() {
-    console.log(`[${new Date().toISOString()}] Starting server...`);
+    logger.info('Starting server...', { cwd: SERVER_DIR });
     
-    serverProcess = spawn('npm', ['run', 'start'], {
+    // Run server.js directly with node instead of using npm
+    serverProcess = spawn('/usr/local/bin/node', ['server.js'], {
         stdio: 'inherit',
-        cwd: __dirname,
+        cwd: SERVER_DIR,
         env: {
             ...process.env,
-            NODE_OPTIONS: '--max-old-space-size=512' // Limit Node.js memory usage
+            NODE_ENV: 'production',
+            NODE_OPTIONS: '--max-old-space-size=512'
         }
     });
 
@@ -94,6 +99,16 @@ function gracefulShutdown() {
 // Handle shutdown signals
 process.on('SIGTERM', gracefulShutdown);
 process.on('SIGINT', gracefulShutdown);
+
+// Error handling for uncaught exceptions
+process.on('uncaughtException', (error) => {
+    logger.error('Uncaught Exception:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
 
 // Use top-level await for startup
 startServer();
