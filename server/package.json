@@ -12,6 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "winston": "^3.17.0",
+    "winston-daily-rotate-file": "^5.0.0",
     "@atproto/api": "^0.13.15",
     "@skyware/jetstream": "^0.2.0",
     "@tensorflow/tfjs-node": "^4.22.0",
