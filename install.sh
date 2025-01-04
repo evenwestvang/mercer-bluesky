@@ -9,7 +9,7 @@ fi
 
 # Wait for memory to settle
 echo "Waiting for memory to free up..."
-sleep 10
+sleep 2
 
 # Check available memory
 FREE_MEM=$(free -m | awk '/^Mem:/{print $4}')

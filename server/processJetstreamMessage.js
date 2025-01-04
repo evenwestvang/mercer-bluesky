@@ -7,7 +7,7 @@ const agent = new BskyAgent({
 });
 
 // Create a worker pool based on available CPU cores (leave one core free)
-const MAX_CONCURRENT = Math.max(1, os.cpus().length - 1);
+const MAX_CONCURRENT = Math.max(1, os.cpus().length);
 const MAX_QUEUE_SIZE = MAX_CONCURRENT * 2; // Only keep 2x worker count items
 let activeWorkers = 0;
 const workQueue = [];
