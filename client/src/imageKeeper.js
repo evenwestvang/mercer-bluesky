@@ -83,7 +83,7 @@ const drawFrame = () => {
     // Skip all drawing logic if mouse is down
     if (!isMouseDown) {
         // Randomly clear image array
-        if (Math.random() < 0.002 && images.length > 5) {
+        if (Math.random() < 0.0015 && images.length > 7) {
             images = [];
             ticksTillNextImage = 20 + Math.floor(Math.random() * 30);
         }
