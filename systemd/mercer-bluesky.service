@@ -1,0 +1,16 @@
+[Unit]
+Description=Mercer Bluesky Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/even/mercer-bluesky
+ExecStart=/usr/bin/node server/wrapper.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+Environment=LOAD_THRESHOLD=0.8
+
+[Install]
+WantedBy=default.target

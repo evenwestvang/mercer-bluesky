@@ -1,31 +1,10 @@
-{
-	debug
-}
-
 bigmood.blue {
-	root * /home/even/mercer-bluesky/client/dist
-	file_server
+        root * /home/even/mercer-bluesky/client/dist
+        file_server
 
-	reverse_proxy /ws* localhost:3001 {
-        	header_up Connection {http.request.header.Connection}
-        	header_up Upgrade {http.request.header.Upgrade}
-    	}
-
-
-    	# Proxy requests to /images/* to an external source
-    	reverse_proxy /img/* {
-        	to https://cdn.bsky.app  # Replace with your external image source
-		# rewrite * /{http.request.uri.path.rel}
-        	header_down Access-Control-Allow-Origin *  # Add necessary CORS headers
-        	header_down Access-Control-Allow-Methods "GET, OPTIONS"
-        	header_down Cache-Control "public, max-age=31536000, immutable"  # Optional: Enable caching
-
-
-		log {
-        		output stdout   # Logs to the console
-        		level debug     # Sets debug-level logging for this block
-    		}
-    	}
-
+        reverse_proxy /ws* localhost:3001 {
+                header_up Connection {http.request.header.Connection}
+                header_up Upgrade {http.request.header.Upgrade}
+        }
 
 }

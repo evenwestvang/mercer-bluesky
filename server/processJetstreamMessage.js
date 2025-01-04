@@ -1,51 +1,41 @@
 import { BskyAgent } from '@atproto/api';
-import { classifyImages } from './imageClassification.js'
+import { classifyImages } from './imageClassification.js';
+import os from 'os';
 
 const agent = new BskyAgent({
     service: 'https://public.api.bsky.app'
 });
 
-// Add rate limiting configuration
-const RATE_LIMIT = 4; // requests per second
-let requestCount = 0;
-let lastReset = Date.now();
+// Create a worker pool based on available CPU cores (leave one core free)
+const MAX_CONCURRENT = Math.max(1, os.cpus().length - 1);
+const MAX_QUEUE_SIZE = MAX_CONCURRENT * 2; // Only keep 2x worker count items
+let activeWorkers = 0;
+const workQueue = [];
 
-export const processJetstreamMessage = (wsServer) => async (message) => {
-    // Reset counter every second
-    const now = Date.now();
-    if (now - lastReset >= 1000) {
-        requestCount = 0;
-        lastReset = now;
+const processQueue = () => {
+    // Process next item if we have capacity and queue items
+    while (activeWorkers < MAX_CONCURRENT && workQueue.length > 0) {
+        const nextWork = workQueue.shift();
+        processWorkItem(nextWork);
     }
+};
 
-    const uri = `at://${message.did}/app.bsky.feed.post/${message.commit.rkey}`;
-
-    if (message.commit.operation !== 'create' || !message.commit.record?.embed?.images?.length) {
-        return
-    }
-
+const processWorkItem = async ({ message, wsServer }) => {
+    activeWorkers++;
     try {
+        const uri = `at://${message.did}/app.bsky.feed.post/${message.commit.rkey}`;
+        
         const postResponse = await agent.api.app.bsky.feed.getPostThread({
             uri: uri,
             depth: 0
         });
 
         if (!postResponse.success || !postResponse.data?.thread?.post?.embed) {
-            return
+            return;
         }
 
         const images = postResponse.data.thread.post.embed.images;
-        let classifications = Array(images.length).fill(null);
-
-        // Only classify images if we're under rate limit
-        if (requestCount < RATE_LIMIT) {
-            requestCount++;
-            classifications = await classifyImages(images)
-                .catch(error => {
-                    console.error('Error classifying images:', error);
-                    return Array(images.length).fill(null);
-                });
-        }
+        const classifications = await classifyImages(images);
 
         const imagesWithClassifications = images.map((image, index) => ({
             ...image,
@@ -64,7 +54,27 @@ export const processJetstreamMessage = (wsServer) => async (message) => {
         wsServer.handleMessage(messageData);
 
     } catch (error) {
-        console.error('Error fetching post data:', error);
+        console.error('Error processing work item:', error);
+    } finally {
+        activeWorkers--;
+        // Try to process next item in queue
+        processQueue();
+    }
+};
+
+export const processJetstreamMessage = (wsServer) => (message) => {
+    if (message.commit.operation !== 'create' || !message.commit.record?.embed?.images?.length) {
         return;
     }
+
+    // Drop if queue is at capacity
+    if (workQueue.length >= MAX_QUEUE_SIZE) {
+        return;
+    }
+
+    // Add work to queue
+    workQueue.push({ message, wsServer });
+    
+    // Try to process queue
+    processQueue();
 };
