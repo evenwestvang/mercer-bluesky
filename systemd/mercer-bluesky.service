@@ -6,14 +6,26 @@ Wants=network-online.target
 [Service]
 Type=simple
 WorkingDirectory=/home/even/mercer-bluesky/server
-ExecStart=/usr/local/bin/node /home/even/mercer-bluesky/server/wrapper.js
+ExecStart=/usr/local/bin/node /home/even/mercer-bluesky/server/server.js
 Restart=always
 RestartSec=10
+
+# Environment settings
 Environment=NODE_ENV=production
-Environment=LOAD_THRESHOLD=0.8
 Environment=PATH=/usr/local/bin:/usr/bin:/bin
-StandardOutput=append:/home/even/mercer-bluesky/logs/systemd.log
-StandardError=append:/home/even/mercer-bluesky/logs/systemd.error.log
+
+# System limits and monitoring
+CPUQuota=95%
+MemoryHigh=1G
+MemoryMax=1.5G
+
+# Logging (using journald)
+StandardOutput=journal
+StandardError=journal
+
+# Graceful shutdown settings
+TimeoutStopSec=30
+KillMode=mixed
 
 [Install]
 WantedBy=default.target
