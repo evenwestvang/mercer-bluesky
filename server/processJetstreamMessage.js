@@ -60,12 +60,13 @@ const processWorkItem = async ({ message, wsServer }) => {
             classification: classifications[index],
         }));
 
+        const originalEmbed = postResponse.data.thread.post.embed;
+
         const messageData = {
             uri,
             repo: message.repo,
             embed: {
-                ...postResponse.data.thread.post.embed,
-                images: imagesWithClassifications
+                images: imagesWithClassifications,
             },
         };
 
