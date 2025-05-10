@@ -9,6 +9,7 @@ WorkingDirectory=/home/even/mercer-bluesky/server
 ExecStart=/usr/local/bin/node /home/even/mercer-bluesky/server/server.js
 Restart=always
 RestartSec=10
+RuntimeMaxSec=600
 
 # Environment settings
 Environment=NODE_ENV=production
