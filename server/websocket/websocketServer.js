@@ -5,6 +5,7 @@ const createWebSocketServer = () => {
     const messageHistory = [];
     let lastBroadcastTime = Date.now();
     
+    console.log(`Starting WebSocket server on port ${config.WS_PORT}...`);
     const wss = new WebSocketServer({ port: config.WS_PORT });
     
     const handleMessage = (messageData) => {
@@ -26,6 +27,7 @@ const createWebSocketServer = () => {
     };
 
     wss.on('connection', (ws) => {
+        console.log(`Client connected. Total clients: ${wss.clients.size}`);
         messageHistory.forEach(msg => {
             ws.send(JSON.stringify(msg));
         });
@@ -34,4 +36,4 @@ const createWebSocketServer = () => {
     return { wss, handleMessage };
 };
 
-export default createWebSocketServer; 
+export default createWebSocketServer;

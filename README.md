@@ -30,3 +30,53 @@ In Philip K. Dick's "Do Androids Dream of Electric Sheep?", Mercer's empathy box
 - Absolutely not for those with photosensitive conditions 
 - Effects subjective and unverified
 - No warranty expressed or implied
+
+## Production Deployment on Free GCP e2-micro Instance
+The server is optimized to run on a free Google Cloud Platform e2-micro instance (0.5 vCPU, 1GB RAM). Using systemd for process management ensures reliable operation within these constraints.
+
+Create the following systemd user service file at `~/.config/systemd/user/mercer-bluesky.service`:
+
+```ini
+[Unit]
+Description=Mercer Bluesky Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/even/mercer-bluesky/server
+ExecStart=/usr/local/bin/node /home/even/mercer-bluesky/server/server.js
+Restart=always
+RestartSec=10
+
+# Environment settings
+Environment=NODE_ENV=production
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+
+# System limits and monitoring (optimized for e2-micro)
+CPUQuota=95%
+MemoryHigh=1G
+MemoryMax=1.5G
+
+# Logging (using journald)
+StandardOutput=journal
+StandardError=journal
+
+# Graceful shutdown settings
+TimeoutStopSec=30
+KillMode=mixed
+
+[Install]
+WantedBy=default.target
+```
+
+Enable and start the service:
+```bash
+systemctl --user enable mercer-bluesky.service
+systemctl --user start mercer-bluesky.service
+```
+
+View logs with:
+```bash
+journalctl --user-unit mercer-bluesky.service
+```

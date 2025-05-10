@@ -3,7 +3,8 @@ import { classifyImages } from './imageClassification.js';
 import os from 'os';
 
 const agent = new BskyAgent({
-    service: 'https://public.api.bsky.app'
+    service: 'https://public.api.bsky.app',
+    timeout: 10000  // 10 second timeout
 });
 
 // Create a worker pool based on available CPU cores (leave one core free)
@@ -25,12 +26,29 @@ const processWorkItem = async ({ message, wsServer }) => {
     try {
         const uri = `at://${message.did}/app.bsky.feed.post/${message.commit.rkey}`;
         
-        const postResponse = await agent.api.app.bsky.feed.getPostThread({
-            uri: uri,
-            depth: 0
-        });
+        // Add retry logic for API calls
+        let retries = 3;
+        let postResponse;
+        
+        while (retries > 0) {
+            try {
+                postResponse = await agent.api.app.bsky.feed.getPostThread({
+                    uri: uri,
+                    depth: 0
+                });
+                break; // Success, exit retry loop
+            } catch (error) {
+                retries--;
+                if (retries === 0) {
+                    throw error; // Re-throw if all retries failed
+                }
+                console.log(`Retrying API call, ${retries} attempts remaining`);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            }
+        }
 
-        if (!postResponse.success || !postResponse.data?.thread?.post?.embed) {
+        if (!postResponse?.success || !postResponse?.data?.thread?.post?.embed) {
+            console.log('No valid post data found:', { uri, success: postResponse?.success });
             return;
         }
 
@@ -55,6 +73,9 @@ const processWorkItem = async ({ message, wsServer }) => {
 
     } catch (error) {
         console.error('Error processing work item:', error);
+        if (error.cause) {
+            console.error('Caused by:', error.cause);
+        }
     } finally {
         activeWorkers--;
         // Try to process next item in queue
