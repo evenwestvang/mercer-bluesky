@@ -1,5 +1,5 @@
 import { BskyAgent } from '@atproto/api';
-import { classifyImages } from './imageClassification.js';
+// import { classifyImages } from './imageClassification.js'; // LLM model import disabled for debugging
 import os from 'os';
 
 const agent = new BskyAgent({
@@ -23,8 +23,12 @@ const processQueue = () => {
 
 const processWorkItem = async ({ message, wsServer }) => {
     activeWorkers++;
+    const workItemUri = message?.did && message?.commit?.rkey ? `at://${message.did}/app.bsky.feed.post/${message.commit.rkey}` : 'Unknown URI';
+    console.log(`[${workItemUri}] Starting to process work item. Active workers: ${activeWorkers}`);
+
     try {
         const uri = `at://${message.did}/app.bsky.feed.post/${message.commit.rkey}`;
+        console.log(`[${uri}] Fetching post thread.`);
         
         // Add retry logic for API calls
         let retries = 3;
@@ -40,24 +44,27 @@ const processWorkItem = async ({ message, wsServer }) => {
             } catch (error) {
                 retries--;
                 if (retries === 0) {
+                    console.error(`[${uri}] API call failed after multiple retries.`);
                     throw error; // Re-throw if all retries failed
                 }
-                console.log(`Retrying API call, ${retries} attempts remaining`);
+                console.log(`[${uri}] Retrying API call, ${retries} attempts remaining`);
                 await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
             }
         }
+        console.log(`[${uri}] Successfully fetched post thread.`);
 
         if (!postResponse?.success || !postResponse?.data?.thread?.post?.embed) {
-            console.log('No valid post data found:', { uri, success: postResponse?.success });
+            console.log(`[${uri}] No valid post data found:`, { success: postResponse?.success });
             return;
         }
 
         const images = postResponse.data.thread.post.embed.images;
-        const classifications = await classifyImages(images);
+        // const classifications = await classifyImages(images); // LLM model call disabled for debugging
 
         const imagesWithClassifications = images.map((image, index) => ({
             ...image,
-            classification: classifications[index],
+            // classification: classifications[index], // Original line
+            classification: null, // Set to null as we've disabled classification
         }));
 
         const originalEmbed = postResponse.data.thread.post.embed;
@@ -71,30 +78,38 @@ const processWorkItem = async ({ message, wsServer }) => {
         };
 
         wsServer.handleMessage(messageData);
+        console.log(`[${uri}] Successfully processed and broadcasted message.`);
 
     } catch (error) {
-        console.error('Error processing work item:', error);
+        console.error(`[${workItemUri}] Error processing work item:`, error);
         if (error.cause) {
-            console.error('Caused by:', error.cause);
+            console.error(`[${workItemUri}] Caused by:`, error.cause);
         }
     } finally {
         activeWorkers--;
+        console.log(`[${workItemUri}] Finished processing work item. Active workers: ${activeWorkers}`);
         // Try to process next item in queue
         processQueue();
     }
 };
 
 export const processJetstreamMessage = (wsServer) => (message) => {
+    const initialUri = message?.commit?.cid && message?.did ? `at://${message.did}/app.bsky.feed.post/${message.commit.rkey}` : 'Incoming Jetstream message (pre-processing)';
+    console.log(`[${initialUri}] Received Jetstream message. Operation: ${message?.commit?.operation}, Images: ${message?.commit?.record?.embed?.images?.length || 0}`);
+
     if (message.commit.operation !== 'create' || !message.commit.record?.embed?.images?.length) {
+        console.log(`[${initialUri}] Skipping message: Not a create operation or no images.`);
         return;
     }
 
     // Drop if queue is at capacity
     if (workQueue.length >= MAX_QUEUE_SIZE) {
+        console.warn(`[${initialUri}] Work queue is full (${workQueue.length}/${MAX_QUEUE_SIZE}). Dropping message.`);
         return;
     }
 
     // Add work to queue
+    console.log(`[${initialUri}] Adding message to work queue. Queue size: ${workQueue.length + 1}`);
     workQueue.push({ message, wsServer });
     
     // Try to process queue

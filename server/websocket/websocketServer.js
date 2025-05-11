@@ -8,6 +8,15 @@ const createWebSocketServer = () => {
     console.log(`Starting WebSocket server on port ${config.WS_PORT}...`);
     const wss = new WebSocketServer({ port: config.WS_PORT });
     
+    wss.on('error', (error) => {
+        console.error('WebSocket Server Error:', error);
+        // Depending on the error, you might want to attempt a graceful shutdown
+        // or re-initialization, but for now, logging is the priority.
+        // If the error is critical (e.g., EADDRINUSE during initial startup though that should be caught earlier),
+        // the process might need to exit so systemd can restart it.
+        // For runtime errors, this log will be key.
+    });
+    
     const handleMessage = (messageData) => {
         // Add to history, maintaining max size
         messageHistory.push(messageData);
