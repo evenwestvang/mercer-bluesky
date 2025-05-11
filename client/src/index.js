@@ -49,10 +49,10 @@ const initializeWithModal = () => {
     });
 
     // SFW button
-    document.querySelector('.warning-2 button.sfw').addEventListener('click', () => {
-        modal.style.display = 'none';
-        connectWebSocket({ allowNSFW: false });
-    });
+    // document.querySelector('.warning-2 button.sfw').addEventListener('click', () => {
+    //     modal.style.display = 'none';
+    //     connectWebSocket({ allowNSFW: false });
+    // });
 
     // NSFW button
     document.querySelector('.warning-2 button.nsfw').addEventListener('click', () => {
