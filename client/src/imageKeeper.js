@@ -34,25 +34,25 @@ export function initializeImageKeeper({ allowNSFW: nsfw = false } = {}) {
 export function addImage(imageObject) {
 
     // Content filtering
-    const classification = imageObject.classification || [];
+    // const classification = imageObject.classification || [];
 
-    if (classification.length == 0) {
-        return null;
-    }
+    // if (classification.length == 0) {
+    //     return null;
+    // }
 
-    const isNSFW = classification.length == 0 || classification.some(c => 
-        (c.className === 'Porn' || c.className === 'Hentai') && 
-        c.probability > NSFW_THRESHOLD
-    );
+    // const isNSFW = classification.length == 0 || classification.some(c => 
+    //     (c.className === 'Porn' || c.className === 'Hentai') && 
+    //     c.probability > NSFW_THRESHOLD
+    // );
 
-    if (!allowNSFW && isNSFW) {
-        // console.warn('NSFW content filtered');
-        return null;
-    }
+    // if (!allowNSFW && isNSFW) {
+    //     // console.warn('NSFW content filtered');
+    //     return null;
+    // }
 
-    if (images.length >= MAX_IMAGES) {
-        images.shift(); // Remove oldest image
-    }
+    // if (images.length >= MAX_IMAGES) {
+    //     images.shift(); // Remove oldest image
+    // }
 
     // Create and load image
     const img = new Image();
