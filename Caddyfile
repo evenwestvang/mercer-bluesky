@@ -2,9 +2,23 @@ bigmood.blue {
         root * /home/even/mercer-bluesky/client/dist
         file_server
 
+        # Health check endpoint
+        handle /health {
+                respond 200
+        }
+
+        # WebSocket proxy with improved configuration
         reverse_proxy /ws* localhost:3001 {
                 header_up Connection {http.request.header.Connection}
                 header_up Upgrade {http.request.header.Upgrade}
+                header_up Host {host}
+                header_up X-Real-IP {remote}
+                header_up X-Forwarded-For {remote}
+                header_up X-Forwarded-Proto {scheme}
+                
+                # Add timeouts
+                timeout 60s
+                health_timeout 5s
+                health_interval 30s
         }
-
 }

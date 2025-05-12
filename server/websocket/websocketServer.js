@@ -6,8 +6,26 @@ const createWebSocketServer = () => {
     let lastBroadcastTime = Date.now();
     
     console.log(`Starting WebSocket server on port ${config.WS_PORT}...`);
-    const wss = new WebSocketServer({ port: config.WS_PORT });
+    const wss = new WebSocketServer({ 
+        port: config.WS_PORT,
+        // Add ping interval to keep connections alive
+        perMessageDeflate: false,
+        clientTracking: true
+    });
     
+    // Set up ping interval
+    const pingInterval = setInterval(() => {
+        wss.clients.forEach((ws) => {
+            if (ws.isAlive === false) {
+                console.log('Client connection timed out, terminating');
+                return ws.terminate();
+            }
+            
+            ws.isAlive = false;
+            ws.ping();
+        });
+    }, 30000); // Send ping every 30 seconds
+
     wss.on('error', (error) => {
         console.error('WebSocket Server Error:', error);
         // Depending on the error, you might want to attempt a graceful shutdown
@@ -37,9 +55,29 @@ const createWebSocketServer = () => {
 
     wss.on('connection', (ws) => {
         console.log(`Client connected. Total clients: ${wss.clients.size}`);
-        messageHistory.forEach(msg => {
-            ws.send(JSON.stringify(msg));
+        
+        // Set up connection tracking
+        ws.isAlive = true;
+        
+        ws.on('pong', () => {
+            ws.isAlive = true;
         });
+
+        ws.on('close', () => {
+            console.log(`Client disconnected. Remaining clients: ${wss.clients.size}`);
+        });
+
+        // Send history to new client
+        messageHistory.forEach(msg => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(msg));
+            }
+        });
+    });
+
+    // Clean up on server close
+    wss.on('close', () => {
+        clearInterval(pingInterval);
     });
 
     return { wss, handleMessage };
